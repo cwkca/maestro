@@ -5,20 +5,18 @@
 #include <stdio.h>
 #include <string.h>
 
-void buffer_init(AudioBuffer *buf, int size)
+void buffer_init(AudioBuffer *buf, int capacity)
 {
-    assert(size > 0);
+    assert(capacity > 0);
 
-    buf->data = malloc(size << 1);
+    buf->data = malloc(capacity << 1);
     if (!buf->data)
     {
-        printf("Failed to allocate %d bytes of memory\n", size << 1);
+        printf("Failed to allocate %d bytes of memory\n", capacity << 1);
         exit(1);
     }
-
-    buf->size = size;
-    buf->end = buf->data + size;
-    buf->start = buf->end;
+    buf->capacity = capacity;
+    buffer_clear(buf);
 }
 
 void buffer_cleanup(AudioBuffer *buf)
@@ -26,23 +24,31 @@ void buffer_cleanup(AudioBuffer *buf)
     if (buf->data)
         free(buf->data);
 
-    buf->data = buf->start = buf->end = NULL;
-    buf->size = 0;
+    buf->start = buf->end = buf->data = NULL;
+    buf->size = buf->capacity = 0;
 }
 
 void buffer_clear(AudioBuffer *buf)
 {
-    buf->start = buf->end;
+    buffer_resize(buf, 0);
+}
+
+void buffer_resize(AudioBuffer *buf, int size)
+{
+    assert(size <= buf->capacity);
+    buf->size = size;
+    buf->start = buf->data;
+    buf->end = buf->data + size;
 }
 
 void buffer_zero(AudioBuffer *buf)
 {
     memset(buf->data, 0, (buf->size << 1));
-    buf->start = buf->data;
 }
 
 int16_t buffer_get(AudioBuffer *buf)
 {
+    assert(buf->start < buf->end);
     return buffer_empty(buf) ? 0 : *(buf->start++);
 }
 

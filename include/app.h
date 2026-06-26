@@ -5,7 +5,7 @@
 
 int app_init();
 int app_start();
-void handle_key(SDL_Keysym keysym);
+void handle_event(SDL_Event event);
 void app_cleanup();
 
 #endif /* APP_H */

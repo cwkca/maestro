@@ -6,13 +6,14 @@
 typedef struct
 {
     int16_t *data, *start, *end;
-    int size; /* in audio samples */
+    int size, capacity;
 } AudioBuffer;
 
-void buffer_init(AudioBuffer *buffer, int size);
+void buffer_init(AudioBuffer *buffer, int capacity);
 void buffer_cleanup(AudioBuffer *buffer);
 
 void buffer_clear(AudioBuffer *buffer);
+void buffer_resize(AudioBuffer *buf, int size);
 void buffer_zero(AudioBuffer *buffer);
 
 int16_t buffer_get(AudioBuffer *buffer);

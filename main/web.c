@@ -12,8 +12,8 @@ void main_loop()
     {
         if (event.type == SDL_QUIT)
             emscripten_cancel_main_loop();
-        if (event.type == SDL_KEYDOWN)
-            handle_key(event.key.keysym);
+        else
+            handle_event(event);
     }
 }
 

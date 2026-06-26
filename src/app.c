@@ -16,6 +16,7 @@
 SDL_Window *window = NULL;
 SDL_AudioDeviceID audio = 0;
 AudioBuffer audio_buffer;
+SDL_Event synthesis_event;
 
 /* Private function prototypes */
 int init_sdl();
@@ -23,6 +24,7 @@ void init_audio();
 void init_buffers();
 void play();
 void quit();
+void synthesize_audio();
 void output_audio(void *userdata, Uint8 *buffer, int len);
 int report_usecs(struct timespec start, int frequency);
 
@@ -41,9 +43,12 @@ int app_start()
     return 0;
 }
 
-void handle_key(SDL_Keysym keysym)
+void handle_event(SDL_Event event)
 {
-    quit();
+    if (event.type == synthesis_event.type)
+        synthesize_audio();
+    else if (event.type == SDL_KEYDOWN)
+        quit();
 }
 
 void app_cleanup()
@@ -67,6 +72,10 @@ int init_sdl()
     window = SDL_CreateWindow(NULL, 0, 0, 0, 0, 0);
     if (!window)
         return 1;
+
+    SDL_zero(synthesis_event);
+    synthesis_event.type = SDL_RegisterEvents(1);
+    assert(synthesis_event.type < SDL_LASTEVENT);
 
     return 0;
 }
@@ -101,6 +110,7 @@ void init_buffers()
     buffer_init(&audio_buffer, TEST_SAMPLE_COUNT);
 
     /* Temporary static square wave */
+    buffer_resize(&audio_buffer, TEST_SAMPLE_COUNT);
     int16_t *sample = audio_buffer.data;
     int16_t *mid = sample + (TEST_SAMPLE_COUNT >> 1);
     while (sample++ < mid)
@@ -122,10 +132,15 @@ void quit()
     SDL_PushEvent(&quit_event);
 }
 
+void synthesize_audio()
+{
+}
+
 void output_audio(void *userdata, Uint8 *buffer, int byte_count)
 {
     assert(byte_count == (audio_buffer.size << 1));
     memcpy(buffer, audio_buffer.data, byte_count);
+    SDL_PushEvent(&synthesis_event);
 }
 
 /* Populate start with clock_gettime(CLOCK_MONOTONIC, &start) */

@@ -1,8 +1,7 @@
 ## Separate synthesis
-- Callback copies from sample buffer, then posts synthesis event
-- Don't clear audio buffer until new synthesis
-- Track synthesized and played frames, then report difference
 - Static circular source buffers with single period waveform
+- Synthesis clear audio buffer, copies from voice waveform buffers
+- Track synthesized and played frames, then report difference
 
 ## Synth keyboard
 - Keyboard updates source buffers:
