@@ -1,7 +1,7 @@
 ## Separate synthesis
-- Optionally circular source buffer "class"
 - Callback copies from sample buffer, then posts synthesis event
-- Print warning if no audio data
+- Don't clear audio buffer until new synthesis
+- Track synthesized and played frames, then report difference
 - Static circular source buffers with single period waveform
 
 ## Synth keyboard
