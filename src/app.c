@@ -10,13 +10,12 @@
 
 #define SAMPLE_RATE 24000
 #define LIVE_SAMPLE_COUNT 64
-#define TEST_SAMPLE_COUNT 256
 #define PLAYBACK_SAMPLE_COUNT 1024
+#define MAX_PERIOD 1500
 
 SDL_Window *window = NULL;
 SDL_AudioDeviceID audio = 0;
-AudioBuffer audio_buffer;
-SDL_Event synthesis_event;
+AudioBuffer note_buffer;
 
 /* Private function prototypes */
 int init_sdl();
@@ -24,8 +23,7 @@ void init_audio();
 void init_buffers();
 void play();
 void quit();
-void synthesize_audio();
-void output_audio(void *userdata, Uint8 *buffer, int len);
+void synthesize(void *userdata, Uint8 *buffer, int len);
 int report_usecs(struct timespec start, int frequency);
 
 int app_init()
@@ -45,9 +43,7 @@ int app_start()
 
 void handle_event(SDL_Event event)
 {
-    if (event.type == synthesis_event.type)
-        synthesize_audio();
-    else if (event.type == SDL_KEYDOWN)
+    if (event.type == SDL_KEYDOWN)
         quit();
 }
 
@@ -73,10 +69,6 @@ int init_sdl()
     if (!window)
         return 1;
 
-    SDL_zero(synthesis_event);
-    synthesis_event.type = SDL_RegisterEvents(1);
-    assert(synthesis_event.type < SDL_LASTEVENT);
-
     return 0;
 }
 
@@ -88,35 +80,35 @@ void init_audio()
     requested_spec.freq = SAMPLE_RATE;
     requested_spec.format = AUDIO_S16;
     requested_spec.channels = 1;
-    requested_spec.samples = TEST_SAMPLE_COUNT;
-    requested_spec.callback = output_audio;
+    requested_spec.samples = LIVE_SAMPLE_COUNT;
+    requested_spec.callback = synthesize;
 
     audio = SDL_OpenAudioDevice(NULL, 0, &requested_spec, &provided_spec, 0);
 
     /* Enforce required parameters */
     assert(provided_spec.format == AUDIO_S16);
     assert(provided_spec.channels == 1);
-    assert(provided_spec.size == (TEST_SAMPLE_COUNT << 1));
+    assert(provided_spec.size == (LIVE_SAMPLE_COUNT << 1));
 
     /* Warn on others */
     if (provided_spec.freq != SAMPLE_RATE)
         printf("Unexpected sample rate: %d Hz\n", provided_spec.freq);
-    if (provided_spec.samples != TEST_SAMPLE_COUNT)
+    if (provided_spec.samples != LIVE_SAMPLE_COUNT)
         printf("Unexpected buffer size: %d\n", provided_spec.samples);
 }
 
 void init_buffers()
 {
-    buffer_init(&audio_buffer, TEST_SAMPLE_COUNT);
+    buffer_init(&note_buffer, MAX_PERIOD);
 
     /* Temporary static square wave */
-    buffer_resize(&audio_buffer, TEST_SAMPLE_COUNT);
-    int16_t *sample = audio_buffer.data;
-    int16_t *mid = sample + (TEST_SAMPLE_COUNT >> 1);
-    while (sample++ < mid)
-        *sample = INT16_MAX;
-    while (sample++ < audio_buffer.end)
-        *sample = INT16_MIN;
+    buffer_resize(&note_buffer, 100);
+    int16_t *sample = note_buffer.start;
+    int16_t *mid = sample + (note_buffer.size >> 1);
+    while (sample < mid)
+        *sample++ = INT16_MAX;
+    while (sample < note_buffer.end)
+        *sample++ = INT16_MIN;
 }
 
 void play()
@@ -132,15 +124,12 @@ void quit()
     SDL_PushEvent(&quit_event);
 }
 
-void synthesize_audio()
+void synthesize(void *userdata, Uint8 *buffer, int byte_count)
 {
-}
-
-void output_audio(void *userdata, Uint8 *buffer, int byte_count)
-{
-    assert(byte_count == (audio_buffer.size << 1));
-    memcpy(buffer, audio_buffer.data, byte_count);
-    SDL_PushEvent(&synthesis_event);
+    int16_t *sample = (int16_t *)buffer;
+    int16_t *end = (int16_t *)(buffer + byte_count);
+    while (sample < end)
+        *(sample++) = buffer_get_circular(&note_buffer);
 }
 
 /* Populate start with clock_gettime(CLOCK_MONOTONIC, &start) */

@@ -54,10 +54,10 @@ int16_t buffer_get(AudioBuffer *buf)
 
 int16_t buffer_get_circular(AudioBuffer *buf)
 {
-    int16_t byte = buffer_get(buf);
+    int16_t sample = buffer_get(buf);
 
     if (buffer_empty(buf))
         buf->start = buf->data;
 
-    return byte;
+    return sample;
 }
