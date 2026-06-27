@@ -58,7 +58,7 @@ $(WEB_OBJ_PATH):
 	mkdir -p $(WEB_OBJ_PATH)
 
 run-web: web
-	echo "\nServing at http://localhost:8000/music.html\n"
+	echo "\nServing at http://localhost:8000\n"
 	python3 -m http.server --directory $(WEB_BUILD)
 
 

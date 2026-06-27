@@ -1,6 +1,10 @@
 ## Synth keyboard
 - Support multiple voices
 
+## Synth upgrades
+- Graphical piano keyboard
+- ADSR envelopes
+
 ## Record and playback
 - Enter to start and stop recording
 - Record in a vector as a midi-like event stream
@@ -17,10 +21,6 @@
 - Instruments: Square (81), Saw (82), Triangle (83)
 - Blank non-filename chars with underscore
 - Unsupported instrument: warn, default to square wave
-
-## Synth upgrades
-- ADSR envelopes
-- Support additional voices
 
 ## Soundfont wavetable synth
 - Sample soundfont: FluidR3 GM
