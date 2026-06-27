@@ -9,12 +9,12 @@
 
 SDL_Window *window = NULL;
 signed char keys_down = 0, octave = 4;
-#define INVALID_NOTE 50
+#define NO_NOTE 50
 
 signed char KEY_NOTES[] = {
-    -4, 4, 0, INVALID_NOTE, INVALID_NOTE, 1, 3, INVALID_NOTE, INVALID_NOTE,
-    6, 8, 10, 7, 5, INVALID_NOTE, INVALID_NOTE, INVALID_NOTE, INVALID_NOTE,
-    -2, INVALID_NOTE, INVALID_NOTE, 2, INVALID_NOTE, -1, INVALID_NOTE, -3};
+    -4, 4, 0, NO_NOTE, NO_NOTE, 1, 3, NO_NOTE, NO_NOTE,
+    6, 8, 10, 7, 5, NO_NOTE, NO_NOTE, NO_NOTE, NO_NOTE,
+    -2, NO_NOTE, NO_NOTE, 2, NO_NOTE, -1, NO_NOTE, -3};
 
 /* Private function prototypes */
 int init_sdl();
@@ -31,6 +31,7 @@ int app_init()
 
 int app_start()
 {
+    printf("Press ESC to quit\n");
     return 0;
 }
 
@@ -56,7 +57,7 @@ void handle_event(SDL_Event event)
         else
         {
             signed char note = get_note_for_key(key);
-            if (note != INVALID_NOTE)
+            if (note != NO_NOTE)
                 play_note(12 + 12 * octave + note);
         }
     }
@@ -76,6 +77,7 @@ void app_cleanup()
 
 int init_sdl()
 {
+    SDL_SetHint(SDL_HINT_NO_SIGNAL_HANDLERS, "1");
     if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_AUDIO))
         return 1;
 
@@ -110,6 +112,6 @@ signed char get_note_for_key(SDL_KeyCode key)
     case SDLK_RSHIFT:
         return 14;
     default:
-        return isalpha(key) ? KEY_NOTES[tolower(key) - 'a'] : INVALID_NOTE;
+        return isalpha(key) ? KEY_NOTES[tolower(key) - 'a'] : NO_NOTE;
     }
 }
