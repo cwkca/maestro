@@ -6,6 +6,7 @@
 #include "synth.h"
 
 SDL_Window *window = NULL;
+char playing = 0;
 
 /* Private function prototypes */
 int init_sdl();
@@ -21,14 +22,24 @@ int app_init()
 
 int app_start()
 {
-    note_on();
     return 0;
 }
 
 void handle_event(SDL_Event event)
 {
     if (event.type == SDL_KEYDOWN)
-        quit();
+    {
+        if (event.key.keysym.sym == SDLK_SPACE)
+        {
+            if (playing)
+                note_off();
+            else
+                note_on();
+            playing = !playing;
+        }
+        else
+            quit();
+    }
 }
 
 void app_cleanup()
