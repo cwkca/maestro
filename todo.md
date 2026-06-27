@@ -1,7 +1,5 @@
-## Synth keyboard
-- Support multiple voices
-
 ## Synth upgrades
+- Saw and triangle waves
 - Graphical piano keyboard
 - ADSR envelopes
 

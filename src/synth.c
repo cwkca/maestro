@@ -12,11 +12,12 @@
 #define LIVE_SAMPLE_COUNT 64
 #define WEB_SAMPLE_COUNT 256
 #define PLAYBACK_SAMPLE_COUNT 1024
-#define MAX_PERIOD 1500
+#define BUFFER_SIZE 1600
 
+const AMPLITUDE = INT16_MAX >> 3;
 SDL_AudioDeviceID audio = 0;
-AudioBuffer note_buffer[2];
-AudioBuffer *play_buffer, *synth_buffer;
+AudioBuffer note_buffers[9];
+AudioBuffer *synth_buffer, *play_buffers[8];
 
 int TONE_PERIODS[] = {
     1468,
@@ -35,7 +36,7 @@ int TONE_PERIODS[] = {
 /* Private function prototypes */
 void init_buffers();
 void init_audio(int buffer_size);
-void swap_buffers();
+void swap_in_buffer(char voice);
 void synthesize(void *userdata, Uint8 *buffer, int len);
 int get_note_period(char note);
 int report_usecs(struct timespec start, int frequency);
@@ -50,7 +51,7 @@ void init_synth()
 #endif
 }
 
-void play_note(char note)
+void play_note(char voice, char note)
 {
     int period = get_note_period(note);
     if (!period)
@@ -60,25 +61,27 @@ void play_note(char note)
     int16_t *sample = synth_buffer->start;
     int16_t *mid = sample + (period >> 1);
     while (sample < mid)
-        *sample++ = INT16_MAX;
+        *sample++ = AMPLITUDE;
     while (sample < synth_buffer->end)
-        *sample++ = INT16_MIN;
+        *sample++ = -AMPLITUDE;
 
-    swap_buffers();
+    swap_in_buffer(voice);
 }
 
-void stop_note()
+void stop_note(char voice)
 {
     buffer_clear(synth_buffer);
-    swap_buffers();
+    swap_in_buffer(voice);
 }
 
 void synth_cleanup()
 {
     if (audio)
         SDL_CloseAudioDevice(audio);
-    buffer_cleanup(note_buffer);
-    buffer_cleanup(note_buffer + 1);
+
+    int i;
+    for (i = 0; i < 9; i++)
+        buffer_cleanup(note_buffers + i);
 }
 
 /*
@@ -87,10 +90,15 @@ void synth_cleanup()
 
 void init_buffers()
 {
-    buffer_init(note_buffer, MAX_PERIOD);
-    buffer_init(note_buffer + 1, MAX_PERIOD);
-    play_buffer = note_buffer;
-    synth_buffer = note_buffer + 1;
+    char i;
+    for (i = 0; i < 8; i++)
+    {
+        buffer_init(note_buffers + i, BUFFER_SIZE);
+        play_buffers[i] = note_buffers + i;
+    }
+
+    buffer_init(note_buffers + i, BUFFER_SIZE);
+    synth_buffer = note_buffers + i;
 }
 
 void init_audio(int buffer_size)
@@ -121,12 +129,12 @@ void init_audio(int buffer_size)
     SDL_PauseAudioDevice(audio, 0);
 }
 
-void swap_buffers()
+void swap_in_buffer(char voice)
 {
-    AudioBuffer *old_buffer = play_buffer;
+    AudioBuffer *old_buffer = play_buffers[voice];
 
     SDL_LockAudioDevice(audio);
-    play_buffer = synth_buffer;
+    play_buffers[voice] = synth_buffer;
     SDL_UnlockAudioDevice(audio);
 
     synth_buffer = old_buffer;
@@ -134,14 +142,23 @@ void swap_buffers()
 
 void synthesize(void *userdata, Uint8 *buffer, int byte_count)
 {
-    if (buffer_empty(play_buffer))
-        memset(buffer, 0, byte_count);
-    else
+    char i;
+    AudioBuffer *active_buffers[9];
+    AudioBuffer **abuf = active_buffers;
+    for (i = 0; i < 8; i++)
+        if (!buffer_empty(play_buffers[i]))
+            *(abuf++) = play_buffers[i];
+    *abuf = NULL;
+
+    int16_t value;
+    int16_t *sample = (int16_t *)buffer;
+    int16_t *end = (int16_t *)(buffer + byte_count);
+    while (sample < end)
     {
-        int16_t *sample = (int16_t *)buffer;
-        int16_t *end = (int16_t *)(buffer + byte_count);
-        while (sample < end)
-            *(sample++) = buffer_get_circular(play_buffer);
+        value = 0;
+        for (abuf = active_buffers; *abuf; abuf++)
+            value += buffer_get_circular(*abuf);
+        *(sample++) = value;
     }
 }
 

@@ -8,7 +8,8 @@
 #include "synth.h"
 
 SDL_Window *window = NULL;
-signed char keys_down = 0, octave = 4;
+signed char octave = 4;
+SDL_KeyCode voice_keys[8] = {0};
 #define NO_NOTE 50
 
 signed char KEY_NOTES[] = {
@@ -37,16 +38,20 @@ int app_start()
 
 void handle_event(SDL_Event event)
 {
+    char v;
     if (event.type == SDL_KEYUP)
     {
-        if (keys_down > 0)
-            keys_down--;
-        if (!keys_down)
-            stop_note();
+        SDL_KeyCode key = event.key.keysym.sym;
+        for (v = 0; v < 8; v++)
+            if (voice_keys[v] == key)
+            {
+                stop_note(v);
+                voice_keys[v] = 0;
+                break;
+            }
     }
     else if (event.type == SDL_KEYDOWN && !event.key.repeat)
     {
-        keys_down++;
         SDL_KeyCode key = event.key.keysym.sym;
         if (key == SDLK_ESCAPE)
             quit();
@@ -58,7 +63,17 @@ void handle_event(SDL_Event event)
         {
             signed char note = get_note_for_key(key);
             if (note != NO_NOTE)
-                play_note(12 + 12 * octave + note);
+            {
+                for (v = 0; v < 8; v++)
+                    if (!voice_keys[v])
+                    {
+                        voice_keys[v] = key;
+                        play_note(v, 12 + 12 * octave + note);
+                        break;
+                    }
+                if (v == 8)
+                    printf("Ran out of voices\n");
+            }
         }
     }
 }
