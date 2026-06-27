@@ -56,9 +56,7 @@ void handle_event(SDL_Event event)
         if (key == SDLK_ESCAPE)
             quit();
         else if (isdigit(key))
-        {
             octave = key - '0';
-        }
         else
         {
             signed char note = get_note_for_key(key);
@@ -71,6 +69,7 @@ void handle_event(SDL_Event event)
                         play_note(v, 12 + 12 * octave + note);
                         break;
                     }
+
                 if (v == 8)
                     printf("Ran out of voices\n");
             }
