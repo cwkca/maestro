@@ -10,6 +10,7 @@
 
 #define SAMPLE_RATE 24000
 #define LIVE_SAMPLE_COUNT 64
+#define WEB_SAMPLE_COUNT 256
 #define PLAYBACK_SAMPLE_COUNT 1024
 #define MAX_PERIOD 1500
 
@@ -33,7 +34,7 @@ int TONE_PERIODS[] = {
 
 /* Private function prototypes */
 void init_buffers();
-void init_audio();
+void init_audio(int buffer_size);
 void swap_buffers();
 void synthesize(void *userdata, Uint8 *buffer, int len);
 int get_note_period(char note);
@@ -42,7 +43,11 @@ int report_usecs(struct timespec start, int frequency);
 void init_synth()
 {
     init_buffers();
-    init_audio();
+#ifdef __EMSCRIPTEN__
+    init_audio(WEB_SAMPLE_COUNT);
+#else
+    init_audio(LIVE_SAMPLE_COUNT);
+#endif
 }
 
 void play_note(char note)
@@ -88,7 +93,7 @@ void init_buffers()
     synth_buffer = note_buffer + 1;
 }
 
-void init_audio()
+void init_audio(int buffer_size)
 {
     SDL_AudioSpec requested_spec, provided_spec;
 
@@ -96,7 +101,7 @@ void init_audio()
     requested_spec.freq = SAMPLE_RATE;
     requested_spec.format = AUDIO_S16;
     requested_spec.channels = 1;
-    requested_spec.samples = LIVE_SAMPLE_COUNT;
+    requested_spec.samples = buffer_size;
     requested_spec.callback = synthesize;
 
     audio = SDL_OpenAudioDevice(NULL, 0, &requested_spec, &provided_spec, 0);
@@ -104,12 +109,12 @@ void init_audio()
     /* Enforce required parameters */
     assert(provided_spec.format == AUDIO_S16);
     assert(provided_spec.channels == 1);
-    assert(provided_spec.size == (LIVE_SAMPLE_COUNT << 1));
+    assert(provided_spec.size == (buffer_size << 1));
 
     /* Warn on others */
     if (provided_spec.freq != SAMPLE_RATE)
         printf("Unexpected sample rate: %d Hz\n", provided_spec.freq);
-    if (provided_spec.samples != LIVE_SAMPLE_COUNT)
+    if (provided_spec.samples != buffer_size)
         printf("Unexpected buffer size: %d\n", provided_spec.samples);
 
     /* Unpause to start device */

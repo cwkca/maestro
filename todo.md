@@ -1,9 +1,4 @@
 ## Synth keyboard
-- Keyboard updates source buffers:
-  - Bottom row white keys
-  - Middle row black keys
-  - Top row waveform selection
-  - Numbers for octaves
 - Support multiple voices
 
 ## Record and playback
