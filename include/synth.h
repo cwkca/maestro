@@ -4,7 +4,7 @@
 #include "buffer.h"
 
 void init_synth();
-void play_note(int period);
+void play_note(char note); /* MIDI note number */
 void stop_note();
 void synth_cleanup();
 

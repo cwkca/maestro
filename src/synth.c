@@ -17,11 +17,26 @@ SDL_AudioDeviceID audio = 0;
 AudioBuffer note_buffer[2];
 AudioBuffer *play_buffer, *synth_buffer;
 
+int TONE_PERIODS[] = {
+    1468,
+    1385,
+    1308,
+    1234,
+    1165,
+    1100,
+    1038,
+    980,
+    925,
+    873,
+    824,
+    778};
+
 /* Private function prototypes */
 void init_buffers();
 void init_audio();
 void swap_buffers();
 void synthesize(void *userdata, Uint8 *buffer, int len);
+int get_note_period(char note);
 int report_usecs(struct timespec start, int frequency);
 
 void init_synth()
@@ -30,11 +45,15 @@ void init_synth()
     init_audio();
 }
 
-void play_note(int period)
+void play_note(char note)
 {
+    int period = get_note_period(note);
+    if (!period)
+        return;
+
     buffer_resize(synth_buffer, period);
     int16_t *sample = synth_buffer->start;
-    int16_t *mid = sample + (buffer_size(synth_buffer) >> 1);
+    int16_t *mid = sample + (period >> 1);
     while (sample < mid)
         *sample++ = INT16_MAX;
     while (sample < synth_buffer->end)
@@ -119,6 +138,18 @@ void synthesize(void *userdata, Uint8 *buffer, int byte_count)
         while (sample < end)
             *(sample++) = buffer_get_circular(play_buffer);
     }
+}
+
+int get_note_period(char note)
+{
+    char octave = note / 12 - 1;
+    if (note < 0 || octave < 0)
+    {
+        printf("Unsupported note %d\n", note);
+        return 0;
+    }
+
+    return TONE_PERIODS[note % 12] >> octave;
 }
 
 /* Populate start with clock_gettime(CLOCK_MONOTONIC, &start) */
