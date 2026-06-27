@@ -25,7 +25,7 @@ void buffer_cleanup(AudioBuffer *buf)
         free(buf->data);
 
     buf->start = buf->end = buf->data = NULL;
-    buf->size = buf->capacity = 0;
+    buf->capacity = 0;
 }
 
 void buffer_clear(AudioBuffer *buf)
@@ -36,14 +36,13 @@ void buffer_clear(AudioBuffer *buf)
 void buffer_resize(AudioBuffer *buf, int size)
 {
     assert(size <= buf->capacity);
-    buf->size = size;
     buf->start = buf->data;
     buf->end = buf->data + size;
 }
 
 void buffer_zero(AudioBuffer *buf)
 {
-    memset(buf->data, 0, (buf->size << 1));
+    memset(buf->data, 0, (buffer_size(buf) << 1));
 }
 
 int16_t buffer_get(AudioBuffer *buf)

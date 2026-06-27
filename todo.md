@@ -1,8 +1,3 @@
-## Separate synthesis
-- Static circular source buffers with single period waveform
-- Synthesis clear audio buffer, copies from voice waveform buffers
-- Track synthesized and played frames, then report difference
-
 ## Synth keyboard
 - Keyboard updates source buffers:
   - Bottom row white keys
