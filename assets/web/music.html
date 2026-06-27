@@ -1,13 +1,38 @@
 <html>
     <head>
         <style type="text/css">
+            body {
+                font-family: sans-serif;
+                padding: 30px;
+            }
+            h1 {
+                text-align: center;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            p {
+                font-size: x-large;
+                text-align: center;
+                line-height: 1.5;
+                margin: 0 auto;
+                padding: 20px;
+            }
             canvas {
                 display: block;
                 margin: 0 auto;
             }
         </style>
+        <link rel="icon" href="/icon.svg" />
     </head>
     <body>
+        <h1>Daddy's synthesizer</h1>
+
+        <p>This synthesizer works best with a physical (typing) keyboard.</p>
+
+        <p>Play the bottom two rows of the keyboard like a piano, <br/> anchored on C.</p>
+
+        <p>Number keys change octaves. <br/> Very high or low notes won't work well.</p>
+
         <canvas id="canvas"></canvas>
 
         <script type='text/javascript'>
