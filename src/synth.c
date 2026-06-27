@@ -14,49 +14,60 @@
 #define MAX_PERIOD 1500
 
 SDL_AudioDeviceID audio = 0;
-AudioBuffer note_buffer;
+AudioBuffer note_buffer[2];
+AudioBuffer *play_buffer, *synth_buffer;
 
 /* Private function prototypes */
+void init_buffers();
 void init_audio();
+void swap_buffers();
 void synthesize(void *userdata, Uint8 *buffer, int len);
 int report_usecs(struct timespec start, int frequency);
 
 void init_synth()
 {
-    buffer_init(&note_buffer, MAX_PERIOD);
+    init_buffers();
     init_audio();
 }
 
-void note_on()
+void play_note(int period)
 {
-    SDL_LockAudioDevice(audio);
-    buffer_resize(&note_buffer, 100);
-    int16_t *sample = note_buffer.start;
-    int16_t *mid = sample + (buffer_size(&note_buffer) >> 1);
+    buffer_resize(synth_buffer, period);
+    int16_t *sample = synth_buffer->start;
+    int16_t *mid = sample + (buffer_size(synth_buffer) >> 1);
     while (sample < mid)
         *sample++ = INT16_MAX;
-    while (sample < note_buffer.end)
+    while (sample < synth_buffer->end)
         *sample++ = INT16_MIN;
-    SDL_UnlockAudioDevice(audio);
+
+    swap_buffers();
 }
 
-void note_off()
+void stop_note()
 {
-    SDL_LockAudioDevice(audio);
-    buffer_clear(&note_buffer);
-    SDL_UnlockAudioDevice(audio);
+    buffer_clear(synth_buffer);
+    swap_buffers();
 }
 
 void synth_cleanup()
 {
     if (audio)
         SDL_CloseAudioDevice(audio);
-    buffer_cleanup(&note_buffer);
+    buffer_cleanup(note_buffer);
+    buffer_cleanup(note_buffer + 1);
 }
 
 /*
  * Private functions
  */
+
+void init_buffers()
+{
+    buffer_init(note_buffer, MAX_PERIOD);
+    buffer_init(note_buffer + 1, MAX_PERIOD);
+    play_buffer = note_buffer;
+    synth_buffer = note_buffer + 1;
+}
 
 void init_audio()
 {
@@ -86,16 +97,27 @@ void init_audio()
     SDL_PauseAudioDevice(audio, 0);
 }
 
+void swap_buffers()
+{
+    AudioBuffer *old_buffer = play_buffer;
+
+    SDL_LockAudioDevice(audio);
+    play_buffer = synth_buffer;
+    SDL_UnlockAudioDevice(audio);
+
+    synth_buffer = old_buffer;
+}
+
 void synthesize(void *userdata, Uint8 *buffer, int byte_count)
 {
-    if (buffer_empty(&note_buffer))
+    if (buffer_empty(play_buffer))
         memset(buffer, 0, byte_count);
     else
     {
         int16_t *sample = (int16_t *)buffer;
         int16_t *end = (int16_t *)(buffer + byte_count);
         while (sample < end)
-            *(sample++) = buffer_get_circular(&note_buffer);
+            *(sample++) = buffer_get_circular(play_buffer);
     }
 }
 

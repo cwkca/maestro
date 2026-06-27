@@ -4,8 +4,8 @@
 #include "buffer.h"
 
 void init_synth();
-void note_on();
-void note_off();
+void play_note(int period);
+void stop_note();
 void synth_cleanup();
 
 #endif /* SYNTH_H */
