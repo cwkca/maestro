@@ -197,7 +197,7 @@ void synth_sawtooth_wave(char note)
 void synth_triangle_wave(char note)
 {
     int period = get_note_period(note);
-    int step = get_note_step(note, 1);
+    int step = get_note_step(note, 1) << 1;
     if (!period || !step)
     {
         buffer_clear(synth_buffer);

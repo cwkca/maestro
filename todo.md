@@ -1,9 +1,8 @@
-## Synth upgrades
-- Saw and triangle waves
-- Graphical piano keyboard
-- ADSR envelopes
+## Load and play
+- Separate executable without sdl input
+- Parse custom .nts format to midi data stream
 
-## Record and playback
+## Record and save
 - Enter to start and stop recording
 - Record in a vector as a midi-like event stream
   - 0x8 [channel] [note] = off
@@ -11,14 +10,15 @@
   - 0b11 [ms] = delay
 - When stopped, SDL_MinimizeWindow to request a name from the terminal
 - Empty means delete (confirm)
-- SDL_RaiseWindow to return to window
-- Space to play. If multiple, list names in terminal and choose by number.
-
-## Save and load songs
-- Midi files
-- Instruments: Square (81), Saw (82), Triangle (83)
 - Blank non-filename chars with underscore
-- Unsupported instrument: warn, default to square wave
+- Save in midi format
+- SDL_RaiseWindow to return to window
+- Parse and play midi
+
+## Synth upgrades
+- Square wave duty cycles
+- Graphical piano keyboard
+- ADSR envelopes
 
 ## Soundfont wavetable synth
 - Sample soundfont: FluidR3 GM
