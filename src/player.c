@@ -1,6 +1,7 @@
 #include "player.h"
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -17,19 +18,20 @@ typedef struct
 #define BUFFER_SIZE 256
 #define DEFAULT_OCTAVE 4
 #define DEFAULT_TEMPO 120
+#define TICKS_PER_QUARTER 96
+
 const char COMMAND_MARKER = '*', *WHITESPACE = " \t\r\n";
+const char NOTE_TONES[] = {9, 11, 0, 2, 4, 5, 7};
 
 char file_buffer[BUFFER_SIZE];
 SongBuffer *curr_song;
 int curr_voice, curr_octave, tempo;
 
-/* Temp */
-int note_count = 0;
-
 /* Private function prototypes */
 int set_up_voice(const char *line);
 int handle_command(const char *command, const char *args);
-int read_note(const char *token);
+int read_note(const char *note);
+int parse_duration(char value);
 int handle_title(const char *title);
 int handle_tempo(const char *value);
 void sleep_test();
@@ -92,8 +94,12 @@ int read_song(FILE *file, SongBuffer *songbuf)
                 /* Don't continue to tokenize this line */
                 break;
             }
-            else if (read_note(token))
-                return 1;
+            else if (strcmp(token, "|")) /* Skip barlines */
+                if (read_note(token))
+                {
+                    printf("Invalid note '%s'\n", token);
+                    return 1;
+                }
     }
 
     if (!feof(file))
@@ -101,8 +107,6 @@ int read_song(FILE *file, SongBuffer *songbuf)
         perror("File error");
         return 1;
     }
-
-    printf("Read %d notes\n", note_count);
 
     songbuf_reset(songbuf);
     return 0;
@@ -133,11 +137,75 @@ int handle_command(const char *command, const char *args)
     return 1;
 }
 
-int read_note(const char *token)
+int read_note(const char *note)
 {
-    if (strcmp(token, "|"))
-        note_count++;
+    if (!note || strlen(note) < 2)
+        return 1;
+
+    char tone, note_name = tolower(*note);
+    signed char note_number;
+    const char *strpos = note + 1;
+    int duration;
+
+    if (note_name == 'r')
+        note_number = -1;
+    else if (note_name >= 'a' && note_name < 'h')
+    {
+        tone = NOTE_TONES[note_name - 'a'];
+
+        if (*strpos == 'b')
+        {
+            tone--;
+            strpos++;
+        }
+        else if (*strpos == '#')
+        {
+            tone++;
+            strpos++;
+        }
+
+        if (!*strpos)
+            return 1;
+        if (isdigit(*strpos))
+            curr_octave = *strpos++ - '0';
+
+        note_number = 12 + 12 * curr_octave + tone;
+    }
+    else
+        return 1;
+
+    if (!*strpos)
+        return 1;
+    duration = parse_duration(*strpos++);
+    if (!duration)
+        return 1;
+
+    if (*strpos)
+        return 1;
+
+    printf("Read note %d with duration %d\n", note_number, duration);
     return 0;
+}
+
+int parse_duration(char value)
+{
+    switch (value)
+    {
+    case 'w':
+        return TICKS_PER_QUARTER << 2;
+    case 'h':
+        return TICKS_PER_QUARTER << 1;
+    case 'q':
+        return TICKS_PER_QUARTER;
+    case 'e':
+        return TICKS_PER_QUARTER >> 1;
+    case 's':
+        return TICKS_PER_QUARTER >> 2;
+    case 't':
+        return TICKS_PER_QUARTER >> 3;
+    default:
+        return 0;
+    }
 }
 
 int handle_title(const char *title)
@@ -162,7 +230,6 @@ int handle_tempo(const char *value)
         return 1;
     }
 
-    printf("Set tempo to %d\n", tempo);
     return 0;
 }
 
