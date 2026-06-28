@@ -14,7 +14,7 @@
 #define PLAYBACK_SAMPLE_COUNT 1024
 #define BUFFER_SIZE 1600
 
-const AMPLITUDE = INT16_MAX >> 3;
+const SQUARE_AMPLITUDE = INT16_MAX >> 4;
 SDL_AudioDeviceID audio = 0;
 AudioBuffer note_buffers[9];
 AudioBuffer *synth_buffer, *play_buffers[8];
@@ -235,9 +235,9 @@ void synth_square_wave(char note, char duty_ratio)
     int16_t *sample = synth_buffer->start;
     int16_t *drop = sample + period / duty_ratio;
     while (sample < drop)
-        *sample++ = AMPLITUDE;
+        *sample++ = SQUARE_AMPLITUDE;
     while (sample < synth_buffer->end)
-        *sample++ = -AMPLITUDE;
+        *sample++ = -SQUARE_AMPLITUDE;
 }
 
 void swap_in_buffer(char voice)
