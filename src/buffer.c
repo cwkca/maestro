@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-void buffer_init(AudioBuffer *buf, int capacity)
+void audiobuf_init(AudioBuffer *buf, int capacity)
 {
     assert(capacity > 0);
 
@@ -16,10 +16,10 @@ void buffer_init(AudioBuffer *buf, int capacity)
         exit(1);
     }
     buf->capacity = capacity;
-    buffer_clear(buf);
+    audiobuf_clear(buf);
 }
 
-void buffer_cleanup(AudioBuffer *buf)
+void audiobuf_cleanup(AudioBuffer *buf)
 {
     if (buf->data)
         free(buf->data);
@@ -28,43 +28,43 @@ void buffer_cleanup(AudioBuffer *buf)
     buf->capacity = 0;
 }
 
-void buffer_clear(AudioBuffer *buf)
+void audiobuf_clear(AudioBuffer *buf)
 {
-    buffer_resize(buf, 0);
+    audiobuf_resize(buf, 0);
 }
 
-void buffer_resize(AudioBuffer *buf, int size)
+void audiobuf_resize(AudioBuffer *buf, int size)
 {
     assert(size <= buf->capacity);
     buf->start = buf->data;
     buf->end = buf->data + size;
 }
 
-void buffer_zero(AudioBuffer *buf)
+void audiobuf_zero(AudioBuffer *buf)
 {
-    memset(buf->data, 0, (buffer_size(buf) << 1));
+    memset(buf->data, 0, (audiobuf_size(buf) << 1));
 }
 
-int16_t buffer_get(AudioBuffer *buf)
+int16_t audiobuf_get(AudioBuffer *buf)
 {
     assert(buf->start < buf->end);
-    return buffer_empty(buf) ? 0 : *(buf->start++);
+    return audiobuf_empty(buf) ? 0 : *(buf->start++);
 }
 
-int16_t buffer_get_circular(AudioBuffer *buf)
+int16_t audiobuf_get_circular(AudioBuffer *buf)
 {
-    int16_t sample = buffer_get(buf);
+    int16_t sample = audiobuf_get(buf);
 
-    if (buffer_empty(buf))
+    if (audiobuf_empty(buf))
         buf->start = buf->data;
 
     return sample;
 }
 
-void buffer_print(AudioBuffer *buf)
+void audiobuf_print(AudioBuffer *buf)
 {
     int16_t *sample;
-    printf("Buffer size %d, values: ", buffer_size(buf));
+    printf("Buffer size %d, values: ", audiobuf_size(buf));
     for (sample = buf->start; sample < buf->end; sample++)
         printf("%d ", *sample);
     printf("\n");

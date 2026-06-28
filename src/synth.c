@@ -61,7 +61,7 @@ uint32_t get_note_step(char note, char shift);
 signed char get_octave(char note);
 int report_usecs(struct timespec start, int frequency);
 
-void (*SYNTHS[])(char) = {
+void (*const SYNTHS[])(char) = {
     synth_square_wave_2,
     synth_sawtooth_wave,
     synth_triangle_wave};
@@ -98,7 +98,7 @@ void set_instrument(char voice, Instrument instrument)
 void play_note(char voice, char note)
 {
     assert(voice >= 0 && voice < 8);
-    buffer_resize(synth_buffer, BUFFER_SIZE);
+    audiobuf_resize(synth_buffer, BUFFER_SIZE);
     voice_synths[voice](note);
     swap_in_buffer(voice);
 }
@@ -106,7 +106,7 @@ void play_note(char voice, char note)
 void stop_note(char voice)
 {
     assert(voice >= 0 && voice < 8);
-    buffer_clear(synth_buffer);
+    audiobuf_clear(synth_buffer);
     swap_in_buffer(voice);
 }
 
@@ -117,7 +117,7 @@ void synth_cleanup()
 
     int i;
     for (i = 0; i < 9; i++)
-        buffer_cleanup(note_buffers + i);
+        audiobuf_cleanup(note_buffers + i);
 }
 
 /*
@@ -129,11 +129,11 @@ void init_buffers()
     char i;
     for (i = 0; i < 8; i++)
     {
-        buffer_init(note_buffers + i, BUFFER_SIZE);
+        audiobuf_init(note_buffers + i, BUFFER_SIZE);
         play_buffers[i] = note_buffers + i;
     }
 
-    buffer_init(note_buffers + i, BUFFER_SIZE);
+    audiobuf_init(note_buffers + i, BUFFER_SIZE);
     synth_buffer = note_buffers + i;
 }
 
@@ -176,7 +176,7 @@ void synth_sawtooth_wave(char note)
     int step = get_note_step(note, 0);
     if (!period || !step)
     {
-        buffer_clear(synth_buffer);
+        audiobuf_clear(synth_buffer);
         return;
     }
 
@@ -200,7 +200,7 @@ void synth_triangle_wave(char note)
     int step = get_note_step(note, 1) << 1;
     if (!period || !step)
     {
-        buffer_clear(synth_buffer);
+        audiobuf_clear(synth_buffer);
         return;
     }
 
@@ -227,11 +227,11 @@ void synth_square_wave(char note, char duty_ratio)
     int period = get_note_period(note);
     if (!period)
     {
-        buffer_clear(synth_buffer);
+        audiobuf_clear(synth_buffer);
         return;
     }
 
-    buffer_resize(synth_buffer, period);
+    audiobuf_resize(synth_buffer, period);
     int16_t *sample = synth_buffer->start;
     int16_t *drop = sample + period / duty_ratio;
     while (sample < drop)
@@ -257,7 +257,7 @@ void combine_audio(void *userdata, Uint8 *buffer, int byte_count)
     AudioBuffer *active_buffers[9];
     AudioBuffer **abuf = active_buffers;
     for (i = 0; i < 8; i++)
-        if (!buffer_empty(play_buffers[i]))
+        if (!audiobuf_empty(play_buffers[i]))
             *abuf++ = play_buffers[i];
     *abuf = NULL;
 
@@ -268,7 +268,7 @@ void combine_audio(void *userdata, Uint8 *buffer, int byte_count)
     {
         value = 0;
         for (abuf = active_buffers; *abuf; abuf++)
-            value += buffer_get_circular(*abuf);
+            value += audiobuf_get_circular(*abuf);
         *sample++ = value;
     }
 }

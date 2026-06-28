@@ -9,18 +9,18 @@ typedef struct
     int capacity;
 } AudioBuffer;
 
-void buffer_init(AudioBuffer *buffer, int capacity);
-void buffer_cleanup(AudioBuffer *buffer);
+void audiobuf_init(AudioBuffer *buffer, int capacity);
+void audiobuf_cleanup(AudioBuffer *buffer);
 
-void buffer_clear(AudioBuffer *buffer);
-void buffer_resize(AudioBuffer *buf, int size);
-void buffer_zero(AudioBuffer *buffer);
+void audiobuf_clear(AudioBuffer *buffer);
+void audiobuf_resize(AudioBuffer *buf, int size);
+void audiobuf_zero(AudioBuffer *buffer);
 
-int16_t buffer_get(AudioBuffer *buffer);
-int16_t buffer_get_circular(AudioBuffer *buffer);
-void buffer_print(AudioBuffer *buffer);
+int16_t audiobuf_get(AudioBuffer *buffer);
+int16_t audiobuf_get_circular(AudioBuffer *buffer);
+void audiobuf_print(AudioBuffer *buffer);
 
-#define buffer_size(b) ((unsigned int)((b)->end - (b)->start))
-#define buffer_empty(b) ((b)->start == (b)->end)
+#define audiobuf_size(b) ((unsigned int)((b)->end - (b)->start))
+#define audiobuf_empty(b) ((b)->start == (b)->end)
 
 #endif /* BUFFER_H */

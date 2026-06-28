@@ -12,7 +12,7 @@ signed char octave = 4;
 SDL_KeyCode voice_keys[8] = {0};
 #define NO_NOTE 50
 
-signed char KEY_NOTES[] = {
+const signed char KEY_NOTES[] = {
     -4, 4, 0, NO_NOTE, NO_NOTE, 1, 3, NO_NOTE, NO_NOTE,
     6, 8, 10, 7, 5, NO_NOTE, NO_NOTE, NO_NOTE, NO_NOTE,
     -2, NO_NOTE, NO_NOTE, 2, NO_NOTE, -1, NO_NOTE, -3};
