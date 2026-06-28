@@ -9,11 +9,14 @@ typedef struct
     int capacity;
 } SongBuffer;
 
+#define songbuf_size(b) ((int)((b)->end - (b)->data))
+#define song_over(b) ((b)->curr >= (b)->end)
+
 void songbuf_init(SongBuffer *, int capacity);
 void songbuf_clear(SongBuffer *buf);
 void songbuf_write(SongBuffer *buf, int16_t data);
-void songbuf_reset(SongBuffer *buf);
-int16_t songbuf_next(SongBuffer *);
+void song_reset(SongBuffer *buf);
+int16_t song_next(SongBuffer *);
 void songbuf_cleanup(SongBuffer *);
 
 #endif /* SONGBUF_H */

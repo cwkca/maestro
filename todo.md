@@ -1,7 +1,3 @@
-## Load and play
-- Separate executable without sdl input
-- Parse custom .nts format to midi data stream
-
 ## Record and save
 - Enter to start and stop recording
 - Record in a vector as a midi-like event stream

@@ -6,6 +6,8 @@
 #include <string.h>
 #include <time.h>
 
+#include <SDL.h>
+
 #include "synth.h"
 
 typedef struct
@@ -19,19 +21,22 @@ typedef struct
 #define DEFAULT_OCTAVE 4
 #define DEFAULT_TEMPO 120
 #define TICKS_PER_QUARTER 96
+#define TIMING_LAG_NS 2e6
 
 const char COMMAND_MARKER = '*', *WHITESPACE = " \t\r\n";
 const char NOTE_TONES[] = {9, 11, 0, 2, 4, 5, 7};
 
 char file_buffer[BUFFER_SIZE];
 SongBuffer *curr_song;
-int curr_voice, curr_octave, tempo;
+signed char curr_voice, curr_octave;
+int tempo;
 
 /* Private function prototypes */
 int set_up_voice(const char *line);
 int handle_command(const char *command, const char *args);
 int read_note(const char *note);
-int parse_duration(char value);
+uint16_t parse_duration(char value);
+void store_note(signed char note_number, uint16_t duration);
 int handle_title(const char *title);
 int handle_tempo(const char *value);
 void sleep_test();
@@ -40,6 +45,19 @@ Command COMMAND_HANDLERS[] = {
     {"title", handle_title},
     {"tempo", handle_tempo}};
 #define COMMAND_COUNT 2
+
+int init_player()
+{
+    SDL_SetHint(SDL_HINT_NO_SIGNAL_HANDLERS, "1");
+    if (SDL_Init(SDL_INIT_AUDIO))
+    {
+        printf("SDL error: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    init_synth();
+    return 0;
+}
 
 int read_song(FILE *file, SongBuffer *songbuf)
 {
@@ -108,12 +126,47 @@ int read_song(FILE *file, SongBuffer *songbuf)
         return 1;
     }
 
-    songbuf_reset(songbuf);
+    song_reset(songbuf);
     return 0;
 }
 
 void play_song(SongBuffer *songbuf)
 {
+    int16_t data;
+    unsigned char note, voice;
+    struct timespec delay;
+    long ns_delay, ns_per_tick = 6e10 / (tempo * TICKS_PER_QUARTER);
+
+    while (!song_over(songbuf))
+    {
+        data = song_next(songbuf);
+        assert(data); /* Zero bytes not allowed */
+        /* printf("Playing value 0x%04x\n", (uint16_t)data); */
+
+        if (data > 0)
+        {
+            ns_delay = data * ns_per_tick - TIMING_LAG_NS;
+            delay.tv_nsec = ns_delay % (long)1e9;
+            delay.tv_sec = ns_delay / 1e9;
+            nanosleep(&delay, NULL);
+        }
+        else
+        {
+            note = data & 0xFF;
+            voice = 15 & data >> 8;
+
+            if (1 & data >> 12)
+                play_note(voice, note);
+            else
+                stop_note(voice);
+        }
+    }
+}
+
+void player_cleanup()
+{
+    SDL_Quit();
+    synth_cleanup();
 }
 
 /*
@@ -145,7 +198,7 @@ int read_note(const char *note)
     char tone, note_name = tolower(*note);
     signed char note_number;
     const char *strpos = note + 1;
-    int duration;
+    uint16_t duration;
 
     if (note_name == 'r')
         note_number = -1;
@@ -179,15 +232,20 @@ int read_note(const char *note)
     duration = parse_duration(*strpos++);
     if (!duration)
         return 1;
+    if (*strpos == '.')
+    {
+        duration += duration >> 1;
+        strpos++;
+    }
 
     if (*strpos)
         return 1;
 
-    printf("Read note %d with duration %d\n", note_number, duration);
+    store_note(note_number, duration);
     return 0;
 }
 
-int parse_duration(char value)
+uint16_t parse_duration(char value)
 {
     switch (value)
     {
@@ -206,6 +264,34 @@ int parse_duration(char value)
     default:
         return 0;
     }
+}
+
+void store_note(signed char note_number, uint16_t duration)
+{
+    assert((curr_voice & 0xF0) == 0);
+    assert(duration < 0x8000);
+
+    if (note_number < 0) /* Rest */
+    {
+        songbuf_write(curr_song, duration);
+        return;
+    }
+
+    /* Todo: support staccato, legato, ties */
+    int gap = duration >> 3;
+
+    /* Todo: define macros? */
+    /* Todo: interleave multiple voices */
+
+    /* Note on */
+    unsigned char status_byte = 0x90 + curr_voice;
+    songbuf_write(curr_song, note_number | status_byte << 8);
+    songbuf_write(curr_song, duration - gap);
+
+    /* Note off */
+    status_byte = 0x80 + curr_voice;
+    songbuf_write(curr_song, note_number | status_byte << 8);
+    songbuf_write(curr_song, gap);
 }
 
 int handle_title(const char *title)

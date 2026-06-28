@@ -21,8 +21,7 @@ int main(int argc, const char **argv)
         return 1;
     }
 
-    int file_size = file_stat.st_size;
-    songbuf_init(&song_data, file_size + (file_size >> 2));
+    songbuf_init(&song_data, (int)file_stat.st_size);
 
     FILE *song_file = fopen(song_filename, "r");
     if (!song_file)
@@ -31,6 +30,9 @@ int main(int argc, const char **argv)
         return 1;
     }
 
+    if (init_player())
+        return 1;
+
     int result = read_song(song_file, &song_data);
     fclose(song_file);
     if (result != 0)
@@ -38,6 +40,7 @@ int main(int argc, const char **argv)
 
     play_song(&song_data);
 
+    player_cleanup();
     songbuf_cleanup(&song_data);
     return 0;
 }

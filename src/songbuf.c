@@ -31,12 +31,12 @@ void songbuf_write(SongBuffer *buf, int16_t data)
     buf->curr = ++buf->end;
 }
 
-void songbuf_reset(SongBuffer *buf)
+void song_reset(SongBuffer *buf)
 {
     buf->curr = buf->data;
 }
 
-int16_t songbuf_next(SongBuffer *buf)
+int16_t song_next(SongBuffer *buf)
 {
     assert(buf->curr < buf->end);
     return *buf->curr++;
