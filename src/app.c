@@ -20,7 +20,8 @@ signed char KEY_NOTES[] = {
 /* Private function prototypes */
 int init_sdl();
 void quit();
-signed char get_note_for_key(SDL_KeyCode key);
+Instrument instrument_for_key(SDL_KeyCode key);
+signed char note_for_key(SDL_KeyCode key);
 
 int app_init()
 {
@@ -59,7 +60,15 @@ void handle_event(SDL_Event event)
             octave = key - '0';
         else
         {
-            signed char note = get_note_for_key(key);
+            Instrument instrument = instrument_for_key(key);
+            if (instrument != NO_INSTRUMENT)
+            {
+                for (v = 0; v < 8; v++)
+                    set_instrument(v, instrument);
+                return;
+            }
+
+            signed char note = note_for_key(key);
             if (note != NO_NOTE)
             {
                 for (v = 0; v < 8; v++)
@@ -109,7 +118,28 @@ void quit()
     SDL_PushEvent(&quit_event);
 }
 
-signed char get_note_for_key(SDL_KeyCode key)
+Instrument instrument_for_key(SDL_KeyCode key)
+{
+    switch (key)
+    {
+    case 'q':
+    case 'u':
+        return SQUARE_WAVE;
+
+    case 'w':
+    case 'o':
+        return SAWTOOTH_WAVE;
+
+    case 't':
+    case 'r':
+        return TRIANGLE_WAVE;
+
+    default:
+        return NO_INSTRUMENT;
+    }
+}
+
+signed char note_for_key(SDL_KeyCode key)
 {
     switch (key)
     {

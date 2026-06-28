@@ -18,7 +18,9 @@ void buffer_zero(AudioBuffer *buffer);
 
 int16_t buffer_get(AudioBuffer *buffer);
 int16_t buffer_get_circular(AudioBuffer *buffer);
-#define buffer_size(b) ((b)->end - (b)->start)
+void buffer_print(AudioBuffer *buffer);
+
+#define buffer_size(b) ((unsigned int)((b)->end - (b)->start))
 #define buffer_empty(b) ((b)->start == (b)->end)
 
 #endif /* BUFFER_H */

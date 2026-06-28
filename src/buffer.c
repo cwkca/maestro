@@ -60,3 +60,12 @@ int16_t buffer_get_circular(AudioBuffer *buf)
 
     return sample;
 }
+
+void buffer_print(AudioBuffer *buf)
+{
+    int16_t *sample;
+    printf("Buffer size %d, values: ", buffer_size(buf));
+    for (sample = buf->start; sample < buf->end; sample++)
+        printf("%d ", *sample);
+    printf("\n");
+}
