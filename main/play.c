@@ -4,7 +4,7 @@
 #include "player.h"
 
 struct stat file_stat;
-SongBuffer song_data;
+NoteBuffer song_data;
 
 int main(int argc, const char **argv)
 {
@@ -21,7 +21,7 @@ int main(int argc, const char **argv)
         return 1;
     }
 
-    songbuf_init(&song_data, (int)file_stat.st_size);
+    notebuf_init(&song_data, (int)file_stat.st_size);
 
     FILE *song_file = fopen(song_filename, "r");
     if (!song_file)
@@ -41,6 +41,6 @@ int main(int argc, const char **argv)
     play_song(&song_data);
 
     player_cleanup();
-    songbuf_cleanup(&song_data);
+    notebuf_cleanup(&song_data);
     return 0;
 }

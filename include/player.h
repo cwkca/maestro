@@ -3,11 +3,11 @@
 
 #include <stdio.h>
 
-#include "songbuf.h"
+#include "notebuf.h"
 
 int init_player();
-int read_song(FILE *file, SongBuffer *songbuf);
-void play_song(SongBuffer *songbuf);
+int read_song(FILE *file, NoteBuffer *songbuf);
+void play_song(NoteBuffer *songbuf);
 void player_cleanup();
 
 #endif /* PLAYER_H */

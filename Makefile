@@ -21,7 +21,7 @@ play: $(NATIVE_BUILD)/play
 $(NATIVE_OBJ_PATH):
 	mkdir -p $(NATIVE_OBJ_PATH)
 
-$(NATIVE_OBJ_PATH)/%.o: src/%.c include/%.h | $(NATIVE_OBJ_PATH)
+$(NATIVE_OBJ_PATH)/%.o: src/%.c | $(NATIVE_OBJ_PATH)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(NATIVE_OBJ_PATH)/main.o: main/native.c | $(NATIVE_OBJ_PATH)
@@ -55,7 +55,7 @@ $(WEB_BUILD)/synth.js: $(WEB_OBJS) $(shell find assets -type f)
 	emcc -o $(WEB_BUILD)/synth.js $(WEB_OBJS) $(EMFLAGS) --preload-file assets
 	cp assets/web/* $(WEB_BUILD)
 
-$(WEB_OBJ_PATH)/%.o: src/%.c include/%.h | $(WEB_OBJ_PATH)
+$(WEB_OBJ_PATH)/%.o: src/%.c | $(WEB_OBJ_PATH)
 	emcc -g $(CFLAGS) -c $< -o $@
 
 $(WEB_OBJ_PATH)/main.o: main/web.c | $(WEB_OBJ_PATH)

@@ -1,10 +1,10 @@
-#include "songbuf.h"
+#include "notebuf.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-void songbuf_init(SongBuffer *buf, int capacity)
+void notebuf_init(NoteBuffer *buf, int capacity)
 {
     buf->data = malloc(capacity << 1);
     if (!buf->data)
@@ -14,40 +14,40 @@ void songbuf_init(SongBuffer *buf, int capacity)
     }
 
     buf->capacity = capacity;
-    songbuf_clear(buf);
+    notebuf_clear(buf);
 }
 
-void songbuf_clear(SongBuffer *buf)
+void notebuf_clear(NoteBuffer *buf)
 {
     buf->curr = buf->end = buf->data;
 }
 
-void songbuf_write(SongBuffer *buf, int16_t data)
+void notebuf_write(NoteBuffer *buf, const Note *note)
 {
     /* Todo: resize as needed */
     assert(buf->curr - buf->data < buf->capacity);
 
-    *buf->curr = data;
+    *buf->curr = *note;
     buf->curr = ++buf->end;
 }
 
-void song_reset(SongBuffer *buf)
+void notebuf_reset(NoteBuffer *buf)
 {
     buf->curr = buf->data;
 }
 
-int16_t song_next(SongBuffer *buf)
+const Note *notebuf_next(NoteBuffer *buf)
 {
     assert(buf->curr < buf->end);
-    return *buf->curr++;
+    return buf->curr++;
 }
 
-void songbuf_cleanup(SongBuffer *buf)
+void notebuf_cleanup(NoteBuffer *buf)
 {
     if (buf->data)
         free(buf->data);
 
     buf->data = NULL;
     buf->capacity = 0;
-    songbuf_clear(buf);
+    notebuf_clear(buf);
 }
