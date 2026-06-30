@@ -21,7 +21,8 @@ int main(int argc, const char **argv)
         return 1;
     }
 
-    songbuf_init(&song_data, (int)file_stat.st_size);
+    int file_size = file_stat.st_size;
+    songbuf_init(&song_data, file_size + (file_size >> 2));
 
     FILE *song_file = fopen(song_filename, "r");
     if (!song_file)
