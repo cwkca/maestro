@@ -112,7 +112,7 @@ int read_song(FILE *file, SongBuffer *songbuf)
                 /* Don't continue to tokenize this line */
                 break;
             }
-            else if (strcmp(token, "|")) /* Skip barlines */
+            else if (strcmp(token, "|") != 0) /* Skip barlines */
                 if (read_note(token))
                 {
                     printf("Invalid note '%s'\n", token);
@@ -181,9 +181,13 @@ int set_up_voice(const char *line)
 
 int handle_command(const char *command, const char *args)
 {
+    /* Comments and lyrics: do nothing */
+    if (*command == '*')
+        return 0;
+
     char i;
     for (i = 0; i < COMMAND_COUNT; i++)
-        if (!strcmp(COMMAND_HANDLERS[i].name, command))
+        if (strcmp(COMMAND_HANDLERS[i].name, command) == 0)
             return COMMAND_HANDLERS[i].handler(args);
 
     printf("Unrecognized command '%s'\n", command);
@@ -232,7 +236,13 @@ int read_note(const char *note)
     duration = parse_duration(*strpos++);
     if (!duration)
         return 1;
-    if (*strpos == '.')
+    if (*strpos == '3') /* Todo: support other tuplets */
+    {
+        duration <<= 1;
+        duration /= 3;
+        strpos++;
+    }
+    if (*strpos == '.') /* Todo: support double dots */
     {
         duration += duration >> 1;
         strpos++;

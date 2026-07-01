@@ -1,0 +1,18 @@
+*title Tetris Theme
+*tempo 140
+
+** Main theme
+eq b3e c4e dq ce b3e | aq  ae c4e eq de ce
+b3q.   c4e dq eq     | cq  a3q aq. re
+re d4q  fe aq ge fe  | eq. ce  eq de ce
+b3q.   c4e dq eq     | cq  a3q aq. re
+
+** Bridge
+e4h ch dh b3h c4h a3h g#w
+e4h ch dh b3h c4q eq ah g#w
+
+** Recap
+eq b3e c4e dq ce b3e | aq  ae c4e eq de ce
+b3q.   c4e dq eq     | cq  a3q aq. re
+re d4q  fe aq ge fe  | eq. ce  eq de ce
+b3q.   c4e dq eq     | cq  a3q aq. re
